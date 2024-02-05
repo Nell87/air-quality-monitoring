@@ -82,10 +82,10 @@ class DatabaseManager:
     
     c.close()
 
-# To remove in prod
-dbmanager_instance = DatabaseManager(connection_string)
-conn = dbmanager_instance.create_connection()
-columns = ['time', 'city', 'aqi']
-data = dbmanager_instance.get_airquality_info(conn,columns, 1)
+# ----------------- To remove in prod -----------------
+# dbmanager_instance = DatabaseManager(connection_string)
+# conn = dbmanager_instance.create_connection()
+# columns = ['time', 'city', 'aqi']
+# data = dbmanager_instance.get_airquality_info(conn,columns, 1)
 # dbmanager_instance.insert_data(conn,data)
 # data

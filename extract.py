@@ -4,8 +4,6 @@ import datetime
 import pandas as pd
 import os
 
-token = os.getenv('AQI_API_TOKEN')
-
 class AqiAPI:
   """ Data extraction from the aqicn API 
   https://aqicn.org/api/
@@ -38,6 +36,7 @@ class AqiAPI:
     else:
       return {"error": f"Failed to get data"}
     
+# ----------------- To remove in prod -----------------
 # aqi_api = AqiAPI(token)
 # city = 'Barcelona'
 # data = aqi_api.extract_data(city)
