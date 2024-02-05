@@ -3,6 +3,7 @@ import os
 import configparser
 import psycopg2 
 import pandas as pd
+import datetime
 
 class DatabaseManager:
   """ Data extraction from the aqicn API 
@@ -24,14 +25,36 @@ class DatabaseManager:
           print(e, 'Error: Could not make connection to the Postgres database')
           return None
           
-  def get_airquality_city(self,conn):
-    
-      query = "SELECT city, time, aqi FROM air_quality"
+  def get_airquality_info(self,conn, columns=None, last_days=None):
+      
+      # Default columns to get if none are specified
+      if columns is None:
+          columns = ['city', 'time', 'aqi', 'inserted_timestamp']
+            
+      # Ensure columns are valid 
+      valid_columns = {'city', 'time', 'aqi', 'inserted_timestamp'}
+      for col in columns:
+          if col not in valid_columns:
+              raise ValueError(f"Invalid column name: {col}")
+              
+      # Build the query
+      query_columns = ', '.join(columns)
+      query = f"SELECT {query_columns} FROM air_quality"
+      params = []
+        
+      # Filter for the last x days
+      if last_days is not None:
+            start_date = datetime.datetime.now() - datetime.timedelta(days=last_days)
+            query += " WHERE time >= %s"
+            params.append(start_date)
+            
+      # Run query
       c = conn.cursor()
-      c.execute(query)
+      c.execute(query, params)
       data = c.fetchall()
-      df = pd.DataFrame(data,columns=['city', 'time', 'aqi', 'inserted_timestamp'])
+      df = pd.DataFrame(data, columns=columns)
       c.close()
+      
       return df
     
     
@@ -59,8 +82,10 @@ class DatabaseManager:
     
     c.close()
 
-# dbmanager_instance = DatabaseManager(connection_string)
-# conn = dbmanager_instance.create_connection()  
-# data = dbmanager_instance.get_airquality_city(conn)
+# To remove in prod
+dbmanager_instance = DatabaseManager(connection_string)
+conn = dbmanager_instance.create_connection()
+columns = ['time', 'city', 'aqi']
+data = dbmanager_instance.get_airquality_info(conn,columns, 1)
 # dbmanager_instance.insert_data(conn,data)
 # data
