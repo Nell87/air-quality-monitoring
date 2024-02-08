@@ -58,34 +58,36 @@ class DatabaseManager:
       return df
     
     
-  def insert_data(self,conn, data):
-    if conn is None:
-      print('Not connected to db')
-      return
-    
-    else:
-      query = 'INSERT INTO air_quality (city, time, aqi, inserted_timestamp) VALUES (%s, %s, %s, %s) ON CONFLICT (city, time) DO NOTHING'
-      
+  def insert_data(self, conn, data):
+      if conn is None:
+          print('Not connected to db')
+          return
+   
+      # Query to insert values           
+      query_values = '''INSERT INTO air_quality (city, time, aqi, inserted_timestamp)
+                 VALUES (%s, %s, %s, %s)
+                 ON CONFLICT (city, time)
+                 DO UPDATE SET aqi = EXCLUDED.aqi, inserted_timestamp = EXCLUDED.inserted_timestamp
+                 WHERE air_quality.aqi IS NULL AND EXCLUDED.aqi IS NOT NULL'''
+
       c = conn.cursor()
+
       for index, row in data.iterrows():
-        values = (row['city'], row['time'], row['aqi'],row['inserted_timestamp'])
-      
-      try:
-        c.execute(query, values)
-        
-      except Exception as e:
-        print(f"Error inserting row {index}: {e}")
-        conn.rollback()
-    
-    conn.commit()
-    print('Data inserted')
-    
-    c.close()
+          # Assuming 'city' is defined somewhere, if it's a part of 'data', use row['city']
+          values = (row['city'], row['time'], row['aqi'], row['inserted_timestamp'])
+
+          try:
+              c.execute(query_values, values)
+          except Exception as e:
+              print(f"Error inserting row {index}: {e}")
+              conn.rollback()
+      c.close()
 
 # ----------------- To remove in prod -----------------
 # dbmanager_instance = DatabaseManager(connection_string)
 # conn = dbmanager_instance.create_connection()
-# columns = ['time', 'city', 'aqi']
-# data = dbmanager_instance.get_airquality_info(conn,columns, 1)
-# dbmanager_instance.insert_data(conn,data)
-# data
+# aqi_api = AqiAPI(token)
+# city = 'Barcelona'
+# data = aqi_api.extract_data(city)
+#dbmanager_instance.insert_data(conn,data)
+ # data
