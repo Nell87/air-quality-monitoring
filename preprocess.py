@@ -22,8 +22,6 @@ class Preprocess():
     
     # Replace outliers with NAs using Standard Deviation.
     data[col_name] = data[col_name].apply(lambda x: np.nan if x < lower_bound or x > upper_bound else x)
-    print(lower_bound)
-    print(upper_bound)
     return data
   
   def fill_noregisters_withNA(data, col_name): 
@@ -43,8 +41,20 @@ class Preprocess():
     return linear_interpolation
   
   def rescale(data, col_name):
+    # Prepare the array
+    array = data[col_name].values.reshape(-1, 1)  # Reshape from 1D to 2D
     scaler = MinMaxScaler(feature_range=(0,1))
-    data[col_name] = scaler.fit_transform(data[[col_name]])
+    scaled = scaler.fit_transform(array)
+    data[col_name] = scaled.flatten()
+    
+    return data
+  
+  def window_data(data,col_name, n=3):
+      windowed_data = pd.DataFrame()
+      for i in range(n, 0, -1):
+          windowed_data[f'Target-{i}'] = data[col_name].shift(i)
+      windowed_data['Target'] = data[col_name]
+      return windowed_data.dropna()
     
 # ----------------- To remove in prod -----------------
 # dbmanager_instance = DatabaseManager(connection_string)
@@ -54,14 +64,3 @@ class Preprocess():
 # data_bcn = data.loc[data['city'] == 'Barcelona']
 # test = Preprocess.replace_outliers_withNA(data_bcn, col_name = 'aqi')
 # test
-
-# col_name= 'time'
-# test = data_no_outliers['Barcelona']
-# test.set_index(col_name, inplace=True)
-# date_range = pd.date_range(start=test.index.min(), end=test.index.max(), freq='H')
-# data_complete = test.reindex(date_range)
-# 
-# data_complete.reset_index(inplace=True)
-# data_complete.rename(columns={'index': col_name}, inplace=True)
-
-
