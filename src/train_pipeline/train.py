@@ -55,7 +55,7 @@ class Train():
         self.X_train,
         self.y_train,
         validation_data = (self.X_val, self.y_val),
-        epochs = 100
+        epochs = 2
       )
       
   def save_model(self):

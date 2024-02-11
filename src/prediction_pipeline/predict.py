@@ -1,5 +1,7 @@
+# Basic libraries
 import tensorflow as tf
 import numpy as np
+import pandas as pd
 
 class Predict():
   def __init__(self, trained_model_path, sequence_length):
@@ -24,8 +26,18 @@ class Predict():
         current_sequence[0, -1, 0] = predicted_value
         
     return predictions
+    
   
-  
+  def dictionary_to_df(predictions):
+    rows = [] 
+    for city, info in predictions.items():
+      for datetime, value in zip(info['predictions_date'], info['real_predictions']):
+          rows.append({'City': city, 'Time': datetime, 'Prediction': value})
+          
+    df = pd.DataFrame(rows) 
+    return df
+      
+#df_dates_predictions(real_predictiosn, dates)
 # ----------------- To remove in prod -----------------
 # sequence_length = 3
 # initial_sequence = [0.5] * sequence_length
