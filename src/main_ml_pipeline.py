@@ -1,25 +1,36 @@
-# Running the data pipeline
-from pathlib import Path
-from extract import AqiAPI
-from dbManager import DatabaseManager
-from preprocess import Preprocess
-from train import Train
-from model import Model
-from predict import Predict
+# Basic libraries
 import os
 import requests
 import psycopg2 
 import pandas as pd
-from config import dbparam, token, cities, connection_string
+import sys
+from pathlib import Path
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import layers
 import tensorflow as tf
 
+# Paths 
+sys.path.append(os.path.abspath('./data_pipeline/'))
+sys.path.append(os.path.abspath('./preprocess_pipeline/'))
+sys.path.append(os.path.abspath('./train_pipeline/'))
+sys.path.append(os.path.abspath('./prediction_pipeline/'))
+
+# Own libraries
+from extract import AqiAPI
+from dbManager import DatabaseManager
+from preprocess import Preprocess
+from train import Train
+from model import Model
+from predict import Predict
+from config import dbparam, token, cities, connection_string
+from preprocess_pipeline import preprocess_pipeline
+
 # set random seed for reproducibility
 tf.random.set_seed(314)
 
+# Running the pipeline
 def main():
   # Initialize your API and Database instance
   dbmanager_instance = DatabaseManager(connection_string)
@@ -37,56 +48,59 @@ def main():
   
   for city, dataset in city_datasets.items():
     #  ----------------- Preprocess pipeline -----------------
-    # Replace outliers with NA
-    clean_data = Preprocess.replace_outliers_withNA(dataset, col_name = 'aqi') 
-    filled_data = Preprocess.fill_noregisters_withNA(clean_data, col_name = 'time')
+    preprocess_instance = Preprocess()
+    processed_data = preprocess_instance.run_preprocess(dataset)
     
-    # Impute Nas
-    filled_data_NA = Preprocess.impute_NA(filled_data, col_name = 'time')
-
-    # Normalize data
-    #data_norm = Preprocess.rescale(filled_data_NA, col_name = 'aqi')  
-    
-    # Reshape data for LSTM
-    windowed_data = Preprocess.window_data(filled_data_NA,'aqi', n=3)
-    
-    # Split in dates, x, y
-    dates, X, y = Train.Windowed_data_to_data_x_y(windowed_data)
-  
     #  ----------------- Training pipeline -------------------
+    # Split in dates, x, y
+    dates, X, y = Train.Windowed_data_to_data_x_y(processed_data)
+
     # Train / test
     train_instance = Train()
-    train_instance.Train_test_split(windowed_data, dates, X, y)
-    
+    train_instance.Train_test_split(processed_data, dates, X, y)
+
     # Initialize and fit the model
     train_instance.Init_model()
     train_instance.Fit_model()
-    
+
     # Save model
     train_instance.save_model()
-    
-    # Predictions
+
+    #  ----------------- Predicting pipeline -------------------
     sequence_length = 3
     initial_sequence = [0.5] * sequence_length
-    
+
     model = Predict("./models/keras.h5",sequence_length = sequence_length)
     train_predictions = model.predict(train_instance.X_train).flatten()
     val_predictions = model.predict(train_instance.X_val).flatten()
     test_predictions = model.predict(train_instance.X_test).flatten()
-    
 
     model_forecast= Predict("./models/keras.h5", sequence_length=sequence_length)
     real_predictions = model_forecast.forecast(initial_sequence, steps=5)
+    
+    # Get forecasting date
+    dates_df = pd.DataFrame(dates, columns=['time'])      
+    last_date = pd.to_datetime(dates_df.iloc[-1]['time'])
+    next_hour_start = last_date + pd.Timedelta(hours=1)
 
+    n= len(real_predictions)
+    pred_dates = pd.date_range(start=next_hour_start, periods=n, freq='H')
+    
+    # Final dataset
     predictions[city] = {
-            'train_predictions': train_predictions,
-            'val_predictions': val_predictions,
-            'test_predictions': test_predictions,
+            #'train_predictions': train_predictions,
+            #'val_predictions': val_predictions,
+            #'test_predictions': test_predictions,
+            'predictions_date':pred_dates,
             'real_predictions':real_predictions
             }
-    
+
+  #df = Predict.dictionary_to_df(predictions)
   return predictions
     
   conn.close()
   
 predictions = main()
+predictions
+
+
