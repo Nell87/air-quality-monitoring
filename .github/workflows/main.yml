@@ -36,4 +36,4 @@ jobs:
         AQI_API_TOKEN: ${{ secrets.AQI_API_TOKEN }}
         SUPABASE_AIRQUALITY_DBNAME: ${{ secrets.SUPABASE_AIRQUALITY_DBNAME}}
         SUPABASE_AIRQUALITY_DB_PORT: ${{ secrets.SUPABASE_AIRQUALITY_DB_PORT}}
-      run: python main_data_pipeline.py
+      run: python src/main_data_pipeline.py
