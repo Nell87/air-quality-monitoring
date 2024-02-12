@@ -2,6 +2,7 @@
 import tensorflow as tf
 import numpy as np
 import pandas as pd
+import datetime as dt
 
 class Predict():
   def __init__(self, trained_model_path, sequence_length):
@@ -35,6 +36,7 @@ class Predict():
           rows.append({'City': city, 'Time': datetime, 'Prediction': value})
           
     df = pd.DataFrame(rows) 
+    df['inserted_timestamp'] = dt.datetime.now().replace(microsecond=0)
     return df
       
 #df_dates_predictions(real_predictiosn, dates)

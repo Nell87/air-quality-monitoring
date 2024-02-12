@@ -46,7 +46,7 @@ class DatabaseManager:
       # Filter for the last x days
       if last_days is not None:
             start_date = datetime.datetime.now() - datetime.timedelta(days=last_days)
-            query += " WHERE time >= %s"
+            query += " WHERE time >= %s AND aqi IS NOT NULL"
             params.append(start_date)
             
       # Run query
@@ -83,6 +83,30 @@ class DatabaseManager:
               print(f"Error inserting row {index}: {e}")
               conn.rollback()
       c.close()
+      
+  def insert_pred(self, conn, data):
+      if conn is None:
+          print('Not connected to db')
+          return
+   
+      # Query to insert values           
+      query_values = '''INSERT INTO air_quality (city, time, predicted_aqi, predicted_aqi_inserted_timestamp)
+                 VALUES (%s, %s, %s, %s)
+                 ON CONFLICT (city, time)
+                 DO UPDATE SET predicted_aqi = EXCLUDED.predicted_aqi, predicted_aqi_inserted_timestamp = EXCLUDED.predicted_aqi_inserted_timestamp'''
+
+      c = conn.cursor()
+
+      for index, row in data.iterrows():
+          # Assuming 'city' is defined somewhere, if it's a part of 'data', use row['city']
+          values = (row['City'], row['Time'], row['Prediction'], row['inserted_timestamp'])
+
+          try:
+              c.execute(query_values, values)
+          except Exception as e:
+              print(f"Error inserting row {index}: {e}")
+              conn.rollback()
+      c.close()
 
 # ----------------- To remove in prod -----------------
 # dbmanager_instance = DatabaseManager(connection_string)
@@ -92,3 +116,8 @@ class DatabaseManager:
 # data = aqi_api.extract_data(city)
 #dbmanager_instance.insert_data(conn,data)
  # data
+ 
+ 
+# dbmanager_instance = DatabaseManager(connection_string)
+# conn = dbmanager_instance.create_connection()
+# dbmanager_instance.insert_pred(conn,predictions)

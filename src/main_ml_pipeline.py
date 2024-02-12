@@ -4,6 +4,7 @@ import requests
 import psycopg2 
 import pandas as pd
 import sys
+import datetime
 from pathlib import Path
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
@@ -95,12 +96,15 @@ def main():
             'real_predictions':real_predictions
             }
 
-  #df = Predict.dictionary_to_df(predictions)
-  return predictions
+  df = Predict.dictionary_to_df(predictions)
+  
+  #  ----------------- Storing predictions in db -------------------
+  dbmanager_instance = DatabaseManager(connection_string)
+  conn = dbmanager_instance.create_connection()
+  dbmanager_instance.insert_pred(conn,df)
+
+  return df
     
   conn.close()
   
 predictions = main()
-predictions
-
-
