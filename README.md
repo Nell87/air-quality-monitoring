@@ -22,6 +22,7 @@ The objective of the project is to build an end-to-end machine learning project 
 - [ ] Dockerize the project for containerization
 - [ ] Implement GitHub Actions for CI/CD
 - [ ] Use Evidently AI for data monitoring
+- [ ] Use Prefect for workflow orchestration
 - [ ] Adopt Poetry for managing dependencies
 - [ ] MLFlow for tracking experiments and managing model registry
 - [ ] Hopsworks as Feature Store
