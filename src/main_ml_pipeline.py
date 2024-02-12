@@ -26,7 +26,6 @@ from train import Train
 from model import Model
 from predict import Predict
 from config import dbparam, token, cities, connection_string
-from preprocess_pipeline import preprocess_pipeline
 
 # set random seed for reproducibility
 tf.random.set_seed(314)
