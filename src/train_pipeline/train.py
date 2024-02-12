@@ -1,8 +1,7 @@
-from dbManager import DatabaseManager
+# Basic libraries
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from model import Model
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
@@ -13,6 +12,10 @@ from sklearn.metrics import mean_squared_error
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import layers
+
+# Own libraries
+from dbManager import DatabaseManager
+from model import Model
 
 class Train():
   
