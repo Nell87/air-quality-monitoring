@@ -2,10 +2,10 @@ name: ml-pipeline
 
 on:
   workflow_dispatch: 
-  schedule:
+  #schedule:
     # Runs at the 30/55 minute mark of every hour
-    - cron:  '34 * * * *'
-    - cron:  '59 * * * *'
+    #- cron:  '34 * * * *'
+    #- cron:  '59 * * * *'
 
 
 jobs:
